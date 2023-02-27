@@ -1,0 +1,36 @@
+# Trigger the build when changes are pushed to the master branch
+trigger:
+  branches:
+    include:
+    - master
+
+# Define the pool of agents to use for the build
+pool:
+  vmImage: 'windows-latest'
+
+# Define the steps for the build and test
+steps:
+- task: NuGetToolInstaller@1
+  displayName: 'Install NuGet'
+  inputs:
+    versionSpec: '5.x'
+
+- task: NuGetCommand@2
+  displayName: 'Restore NuGet packages'
+  inputs:
+    restoreSolution: '**/*.sln'
+
+- task: VSBuild@1
+  displayName: 'Build solution'
+  inputs:
+    solution: '**/*.sln'
+    msbuildArgs: '/p:TargetFrameworkVersion=v4.5 /p:Configuration=Release'
+
+- task: VSTest@2
+  displayName: 'Run tests'
+  inputs:
+    testAssemblyVer2: |
+      **\$(BuildConfiguration)\*test*.dll
+      !**\obj\**
+    platform: 'Any CPU'
+    configuration: 'Release'
