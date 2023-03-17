@@ -1,0 +1,28 @@
+name: Check-Expired-App-Registrations
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run every day at midnight
+
+jobs:
+  check-app-registrations:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Setup PowerShell
+      uses: microsoft/setup-powershell@v1
+
+    - name: Run script
+      run: |
+        $expiredApps = Get-AzureADApplication | Where-Object { $_.EndDateTime -lt (Get-Date) }
+        if ($expiredApps) {
+          Write-Output "The following app registrations have expired:"
+          foreach ($app in $expiredApps) {
+            Write-Output "- $($app.DisplayName) (Object ID: $($app.ObjectId))"
+          }
+        } else {
+          Write-Output "No app registrations have expired."
+        }
